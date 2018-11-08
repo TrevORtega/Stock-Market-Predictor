@@ -1,0 +1,122 @@
+import math
+
+# ask user for a date or a price
+dateOrPrice = input("Enter whether you wish to enter a date or a price\n")
+
+isPrice = 0
+isDate = 0
+year = 0
+month = 0
+monthsSince = 0
+price = 0
+
+if dateOrPrice == "price":
+    price = input("Enter a price e.g(1709.06)\n")
+    #checks for period in input
+    periodChecker = price[len(price) - 3]
+    if periodChecker == '.':
+        isPrice = 1
+        price = float(price)
+        
+if dateOrPrice == "date":
+    year = int(input("Enter a year\n"))
+    # dates not included in .txt files
+    if year > 2018 or (year > 1968 and year < 1984):
+        isDate = 2
+    # dow jones 1985.txt
+    elif year > 1984 and isDate != 2:
+        isDate = 3
+    # dow jones 1914.txt    
+    elif year > 1914 and isDate == 0:
+        isDate = 1
+    else:
+        print("Year needs to be after 1914")
+        
+    month = int(input("Enter the month\n"))
+    if month < 0 and month > 13:
+            isDate = 0
+            print("Needs to be a correct month")
+    else:
+        # format m/1/yyyy for dow jones 1985.txt
+        if isDate == 3:
+            date = str(month) + "/1/" + str(year)
+        # format yyyy-mm-01 for dow jones 1914.txt
+        if isDate == 2 or isDate == 1:
+            if month < 10:
+                new_month = "0" + str(month)
+                date = str(year) + "-" + new_month + "-01"
+            else:
+                date = str(year) + "-" + str(month) + "-01"
+        #find months since 1915
+        monthsSince = ((year - 1915) * 12) + month
+elif isPrice == 0:
+    print("Incorrect Format (maybe add decimal point)")
+    
+# predict the price if a correct date is given
+if isDate != 0:
+    # Date formula is price = 20(months since 1915) + 56.55
+    PredictPrice = 20 * monthsSince + 56.55
+    print("Predicted Price: " + str(PredictPrice))
+    
+
+# predict the date if a correct price is given
+if isPrice != 0:
+    # price formula is months = (price - 56.55) / 20
+    monthsSince = int(round((price - 56.55) / 20))
+    print(str(monthsSince) + " months since 1915")
+    # find the month for the date
+    if monthsSince > 12:
+        year = int(monthsSince / 12)
+        month = monthsSince - (year * 12)
+    # the month can never be zero in a date
+    elif monthsSince == 0:
+        month = 1
+    else:
+        month = monthsSince
+        
+    print("Predicted date:", month, "/1/", year + 1915)
+    
+# value will be in dow jones 1985.txt
+if isDate == 3 or isPrice == 1:
+        
+    # open up file and give back the correct date or price
+    data1985 = open("Dow Jones 1985.txt")
+    # for every line in data, check if the file date matches the given date
+    for lines in data1985:
+        values85 = lines.split()
+        if isDate == 3:
+            if values85[0] == date:
+                print("Actual price: " + str(values85[1]))
+        if isPrice == 1:
+            if str(price) == values85[1]:
+               print("Actual date: " + str(values85[0]))
+    data1985.close()
+
+# date value will be in dow jones 1914.txt
+if isDate == 1 or isPrice == 1:
+        
+    # open up file and give back the correct date or price
+    data1914 = open("dow jones 1914.txt")
+    # for every line in data, check if the file date matches the given date
+    for rows in data1914:
+        values14 = rows.split()
+        if isDate == 1:
+            if values14[0] == date:
+                print("Actual price: " + str(values14[1]))
+        if isPrice == 1:
+            if str(price) == values14[1]:
+               print("Actual date: " + str(values14[0]))
+    data1914.close()
+
+# predict whether or not to invest for a period of time
+# avg market patter is 36 month increase followed by 15 month decrease (36+15=51)
+if (isPrice == 1 or isDate != 0):
+    interval = int(monthsSince / 51)
+    monthsSinceInterval = monthsSince - (51 * interval)
+    isProfitable = 36 - monthsSinceInterval # checks if the given month is in the 36 month profitable margin
+    if (isProfitable > 0): # the month is profitable
+        print("Advice: Invest as soon as possible and don't sell for", isProfitable, "or", isProfitable + 15,"months")
+    else: # the month is not profitable
+        print("Advice: Don't invest or sell for", 51 - monthsSinceInterval, "months")
+    
+
